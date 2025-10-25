@@ -1,17 +1,17 @@
 --Converted with ttyyuu12345's model to script plugin v4
 function sandbox(var,func)
-local env = getfenv(func)
-local newenv = setmetatable({},{
-__index = function(self,k)
-if k=="script" then
-return var
-else
-return env[k]
-end
-end,
-})
-setfenv(func,newenv)
-return func
+	local env = getfenv(func)
+	local newenv = setmetatable({},{
+		__index = function(self,k)
+			if k=="script" then
+				return var
+			else
+				return env[k]
+			end
+		end,
+	})
+	setfenv(func,newenv)
+	return func
 end
 cors = {}
 mas = Instance.new("Model",game:GetService("Lighting"))
@@ -31,53 +31,47 @@ Script1.Parent = Tool0
 table.insert(cors,sandbox(Script1,function()
 --Rescripted by samtheblender
 local Services = {
-Players = (game:FindService("Players") or game:GetService("Players")),
-TweenService = (game:FindService("TweenService") or game:GetService("TweenService")),
-Debris = (game:FindService("Debris") or game:GetService("Debris")),
-RunService = (game:FindService("RunService") or game:GetService("RunService"))
+	Players = (game:FindService("Players") or game:GetService("Players")),
+	TweenService = (game:FindService("TweenService") or game:GetService("TweenService")),	
+	Debris = (game:FindService("Debris") or game:GetService("Debris")),
+	RunService = (game:FindService("RunService") or game:GetService("RunService"))
 }
 
 local Properties = {
-SpeedBoost = 10,
-SpeedForSmoke = 20
+	SpeedBoost = 10,
+	SpeedForSmoke = 20
 }
 
 local Tool = script.Parent
 local Handle = Tool:WaitForChild("Handle")
-local Character, Player, Humanoid, Root, LastSpeed, SmokeConnection, SmokeEffect
+local Character, Player, Humanoid, Root, LastSpeed
 
 function CheckIfAlive()
-return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Player and Player.Parent) and true) or false)
+	return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Player and Player.Parent) and true) or false)
 end
 
--- NOTE: Effect 'Smoke' intentionally removed.
+-- Efek asap dihapus dari versi ini
 
 Tool.Equipped:Connect(function()
-Character = Tool.Parent
-Player = Services.Players:GetPlayerFromCharacter(Character)
-Humanoid = Character:FindFirstChildOfClass("Humanoid")
-Root = Character:FindFirstChild("HumanoidRootPart")
-Services.RunService.Heartbeat:Wait()
-if not Tool:IsDescendantOf(workspace) or not CheckIfAlive() or LastSpeed then
-return
-end
-LastSpeed = Humanoid.WalkSpeed
-Humanoid.WalkSpeed = Humanoid.WalkSpeed + Properties.SpeedBoost
-Handle:WaitForChild("Equip"):Play()
--- Efek asap dihapus: tidak membuat koneksi pada Humanoid.Running untuk smoke.
+	Character = Tool.Parent
+	Player = Services.Players:GetPlayerFromCharacter(Character)
+	Humanoid = Character:FindFirstChildOfClass("Humanoid")
+	Root = Character:FindFirstChild("HumanoidRootPart")
+	Services.RunService.Heartbeat:Wait()
+	if not Tool:IsDescendantOf(workspace) or not CheckIfAlive() or LastSpeed then
+		return
+	end
+	LastSpeed = Humanoid.WalkSpeed
+	Humanoid.WalkSpeed = Humanoid.WalkSpeed + Properties.SpeedBoost
+	Handle:WaitForChild("Equip"):Play()
 end)
 
 Tool.Unequipped:Connect(function()
-if SmokeConnection then
-SmokeConnection:Disconnect()
-SmokeConnection = nil
-end
--- ClearEffect() dihapus karena efek asap sudah tidak ada.
-if not LastSpeed or not CheckIfAlive() then
-return
-end
-Humanoid.WalkSpeed = LastSpeed
-LastSpeed = nil
+	if not LastSpeed or not CheckIfAlive() then
+		return
+	end
+	Humanoid.WalkSpeed = LastSpeed
+	LastSpeed = nil
 end)
 end))
 Part2.Name = "Handle"
@@ -97,12 +91,12 @@ Sound4.Parent = Part2
 Sound4.SoundId = "rbxassetid://99173388"
 Sound4.Volume = 1
 for i,v in pairs(mas:GetChildren()) do
-v.Parent = game:GetService("Players").LocalPlayer.Backpack
-pcall(function() v:MakeJoints() end)
+	v.Parent = game:GetService("Players").LocalPlayer.Backpack
+	pcall(function() v:MakeJoints() end)
 end
 mas:Destroy()
 for i,v in pairs(cors) do
-spawn(function()
-pcall(v)
-end)
+	spawn(function()
+		pcall(v)
+	end)
 end
