@@ -1,123 +1,167 @@
--- AutoSpawn SpeedCoil on respawn (LocalScript)
+-- AutoSpawn SpeedCoil with correct restore on Unequipped (LocalScript)
 -- Taruh di StarterPlayer -> StarterPlayerScripts
 
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 
--- Fungsi yang membuat/menaruh SpeedCoil ke Backpack (client-side)
-local function SpawnSpeedCoil()
-    -- hindari duplikat kalau sudah ada di Backpack atau Character
-    if player:FindFirstChild("Backpack") then
-        if player.Backpack:FindFirstChild("SpeedCoil") then
-            return -- sudah ada
+-- Table untuk menyimpan last speed per humanoid (key = humanoid)
+local lastSpeeds = {}  -- {[humanoid] = number}
+
+local BOOST = 10
+
+local function makeTool()
+    local mas = Instance.new("Model")
+    local Tool0 = Instance.new("Tool")
+    local Part2 = Instance.new("Part")
+    local SpecialMesh3 = Instance.new("SpecialMesh")
+    local Sound4 = Instance.new("Sound")
+
+    Tool0.Name = "SpeedCoil"
+    Tool0.Parent = mas
+    Tool0.TextureId = "rbxassetid://99170415"
+    Tool0.Grip = CFrame.new(0, 0, -0.8)
+    Tool0.ToolTip = "Speed Up!"
+
+    Part2.Name = "Handle"
+    Part2.Parent = Tool0
+    Part2.Size = Vector3.new(1,1,2)
+    Part2.BottomSurface = Enum.SurfaceType.Smooth
+    Part2.TopSurface = Enum.SurfaceType.Smooth
+
+    SpecialMesh3.Parent = Part2
+    SpecialMesh3.MeshId = "rbxassetid://16606212"
+    SpecialMesh3.Scale = Vector3.new(0.7,0.7,0.7)
+    SpecialMesh3.TextureId = "rbxassetid://99170547"
+    SpecialMesh3.MeshType = Enum.MeshType.FileMesh
+
+    Sound4.Name = "Equip"
+    Sound4.Parent = Part2
+    Sound4.SoundId = "rbxassetid://99173388"
+    Sound4.Volume = 1
+
+    -- Perilaku client-side: simpan humanoid saat equip, restore saat unequip
+    -- Simpan referensi humanoid pada closure agar Unequipped dapat mengaksesnya
+    local equippedHumanoid = nil
+    local diedConn = nil
+
+    Tool0.Equipped:Connect(function()
+        -- Parent saat equip harusnya karakter
+        local character = Tool0.Parent
+        if not character then return end
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if not humanoid then return end
+
+        -- simpan reference
+        equippedHumanoid = humanoid
+
+        -- hanya simpan last speed sekali per humanoid
+        if not lastSpeeds[humanoid] then
+            lastSpeeds[humanoid] = humanoid.WalkSpeed or 16
         end
-    end
-    if player.Character then
-        if player.Character:FindFirstChild("SpeedCoil") then
-            return -- sudah menempel di karakter
+
+        -- set boosted speed
+        humanoid.WalkSpeed = (humanoid.WalkSpeed or 16) + BOOST
+
+        -- mainkan suara jika ada
+        local handle = Tool0:FindFirstChild("Handle")
+        if handle then
+            local s = handle:FindFirstChild("Equip")
+            if s and s:IsA("Sound") then
+                pcall(function() s:Play() end)
+            end
         end
-    end
 
-    -- buat tool dan isinya (mengikuti struktur skrip awal)
-    local success, err = pcall(function()
-        local mas = Instance.new("Model")
-        local Tool0 = Instance.new("Tool")
-        local Part2 = Instance.new("Part")
-        local SpecialMesh3 = Instance.new("SpecialMesh")
-        local Sound4 = Instance.new("Sound")
+        -- jika humanoid mati, pastikan kita hapus entry lastSpeeds
+        if diedConn then
+            diedConn:Disconnect()
+            diedConn = nil
+        end
+        diedConn = humanoid.Died:Connect(function()
+            -- bersihkan entry, karena humanoid akan diganti saat respawn
+            lastSpeeds[humanoid] = nil
+            equippedHumanoid = nil
+            if diedConn then
+                diedConn:Disconnect()
+                diedConn = nil
+            end
+        end)
+    end)
 
-        Tool0.Name = "SpeedCoil"
-        Tool0.Parent = mas
-        Tool0.TextureId = "rbxassetid://99170415"
-        Tool0.Grip = CFrame.new(0, 0, -0.8)
-        Tool0.ToolTip = "Speed Up!"
-
-        -- NOTE: kita tidak menaruh Script server-side di Tool; 
-        -- sebelumnya fungsi effect di-bind di client via cors closure.
-        -- Untuk kompatibilitas dengan implementasimu sebelumnya,
-        -- kita tambahkan listener client-side yang mengubah WalkSpeed saat equip.
-
-        -- Buat Handle (Part) & mesh & sound
-        Part2.Name = "Handle"
-        Part2.Parent = Tool0
-        Part2.Size = Vector3.new(1,1,2)
-        Part2.BottomSurface = Enum.SurfaceType.Smooth
-        Part2.TopSurface = Enum.SurfaceType.Smooth
-
-        SpecialMesh3.Parent = Part2
-        SpecialMesh3.MeshId = "rbxassetid://16606212"
-        SpecialMesh3.Scale = Vector3.new(0.7,0.7,0.7)
-        SpecialMesh3.TextureId = "rbxassetid://99170547"
-        SpecialMesh3.MeshType = Enum.MeshType.FileMesh
-
-        Sound4.Name = "Equip"
-        Sound4.Parent = Part2
-        Sound4.SoundId = "rbxassetid://99173388"
-        Sound4.Volume = 1
-
-        -- Tambah behaviour client-side: boost speed on equip, restore on unequip
-        -- (ini menggantikan Script server-side supaya efek bisa bekerja untuk client)
-        local BOOST = 10
-        do
-            -- buat koneksi saat tool di-equip
-            Tool0.Equipped:Connect(function()
-                local character = Tool0.Parent
-                local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-                if not humanoid then return end
-                -- simpan last speed di Attribute supaya aman
-                if humanoid:GetAttribute("SpeedCoil_LastSpeed") then return end
-                humanoid:SetAttribute("SpeedCoil_LastSpeed", humanoid.WalkSpeed)
-                humanoid.WalkSpeed = (humanoid.WalkSpeed or 16) + BOOST
-                local handle = Tool0:FindFirstChild("Handle")
-                if handle then
-                    local s = handle:FindFirstChild("Equip")
-                    if s and s:IsA("Sound") then
-                        pcall(function() s:Play() end)
+    Tool0.Unequipped:Connect(function()
+        -- gunakan equippedHumanoid yang kita simpan saat equip
+        local humanoid = equippedHumanoid
+        if humanoid then
+            local last = lastSpeeds[humanoid]
+            if last then
+                -- restore (pakai pcall untuk aman)
+                pcall(function()
+                    -- Pastikan humanoid masih valid dan parent masih ada
+                    if humanoid.Parent and humanoid.Health ~= nil then
+                        humanoid.WalkSpeed = last
                     end
-                end
-            end)
-
-            Tool0.Unequipped:Connect(function()
-                local character = Tool0.Parent
-                local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-                if not humanoid then return end
-                local last = humanoid:GetAttribute("SpeedCoil_LastSpeed")
-                if last then
-                    humanoid.WalkSpeed = last
-                    humanoid:SetAttribute("SpeedCoil_LastSpeed", nil)
-                end
-            end)
+                end)
+                lastSpeeds[humanoid] = nil
+            end
         end
 
-        -- Pindahkan tool ke Backpack pemain (tunggu Backpack tersedia)
-        local backpack = player:WaitForChild("Backpack", 5)
-        -- final parent
+        -- clear reference
+        equippedHumanoid = nil
+        if diedConn then
+            diedConn:Disconnect()
+            diedConn = nil
+        end
+    end)
+
+    -- jika tool di-destroy / dipindahkan, pastikan membersihkan mapping (optional)
+    Tool0.AncestryChanged:Connect(function(child, parent)
+        -- jika sudah tidak berada di dalam game, hapus mapping untuk safety
+        if not Tool0:IsDescendantOf(game) then
+            equippedHumanoid = nil
+        end
+    end)
+
+    return mas
+end
+
+local function SpawnSpeedCoilToBackpack()
+    -- hindari duplikat
+    local backpack = player:FindFirstChild("Backpack")
+    if not backpack then
+        backpack = player:WaitForChild("Backpack", 5)
+        if not backpack then return end
+    end
+
+    if backpack:FindFirstChild("SpeedCoil") then
+        return
+    end
+    if player.Character and player.Character:FindFirstChild("SpeedCoil") then
+        return
+    end
+
+    local ok, err = pcall(function()
+        local mas = makeTool()
         for i, v in pairs(mas:GetChildren()) do
             v.Parent = backpack
             pcall(function() v:MakeJoints() end)
         end
         mas:Destroy()
     end)
-
-    if not success then
-        warn("SpawnSpeedCoil gagal: ", err)
+    if not ok then
+        warn("Gagal spawn SpeedCoil:", err)
     end
 end
 
--- Auto-spawn saat karakter terbentuk (respawn)
-player.CharacterAdded:Connect(function(char)
-    -- tunda kecil agar Backpack ter-attach
+-- Auto spawn saat respawn / pertama kali
+player.CharacterAdded:Connect(function()
     task.wait(0.1)
-    -- spawn-safe
-    pcall(function() SpawnSpeedCoil() end)
+    pcall(SpawnSpeedCoilToBackpack)
 end)
 
--- Jalankan segera kalau pemain sudah punya character
 if player.Character then
-    task.spawn(function()
+    task.defer(function()
         task.wait(0.1)
-        pcall(function() SpawnSpeedCoil() end)
+        pcall(SpawnSpeedCoilToBackpack)
     end)
 end
 
-print("AutoSpawn SpeedCoil script aktif (client).")
+print("AutoSpawn SpeedCoil (restore-fix) aktif.")
