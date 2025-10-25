@@ -1,182 +1,123 @@
--- SpeedCoil Console v2 (persisten setelah respawn)
+-- AutoSpawn SpeedCoil on respawn (LocalScript)
+-- Taruh di StarterPlayer -> StarterPlayerScripts
+
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 
--- Utility untuk membuat GUI kalau belum ada
-local function createConsoleGui()
-	-- cek kalau sudah ada, kembalikan instance itu
-	local existing = player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("SpeedCoilConsole")
-	if existing then
-		-- pastikan ResetOnSpawn false supaya tidak hilang lagi
-		if existing:IsA("ScreenGui") then
-			pcall(function() existing.ResetOnSpawn = false end)
-		end
-		return existing
-	end
+-- Fungsi yang membuat/menaruh SpeedCoil ke Backpack (client-side)
+local function SpawnSpeedCoil()
+    -- hindari duplikat kalau sudah ada di Backpack atau Character
+    if player:FindFirstChild("Backpack") then
+        if player.Backpack:FindFirstChild("SpeedCoil") then
+            return -- sudah ada
+        end
+    end
+    if player.Character then
+        if player.Character:FindFirstChild("SpeedCoil") then
+            return -- sudah menempel di karakter
+        end
+    end
 
-	-- buat ScreenGui baru dan set ResetOnSpawn = false
-	local gui = Instance.new("ScreenGui")
-	gui.Name = "SpeedCoilConsole"
-	gui.ResetOnSpawn = false
-	gui.Parent = player:WaitForChild("PlayerGui")
+    -- buat tool dan isinya (mengikuti struktur skrip awal)
+    local success, err = pcall(function()
+        local mas = Instance.new("Model")
+        local Tool0 = Instance.new("Tool")
+        local Part2 = Instance.new("Part")
+        local SpecialMesh3 = Instance.new("SpecialMesh")
+        local Sound4 = Instance.new("Sound")
 
-	-- Frame utama
-	local frame = Instance.new("Frame", gui)
-	frame.Size = UDim2.new(0, 250, 0, 150)
-	frame.Position = UDim2.new(0.05, 0, 0.1, 0)
-	frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-	frame.Active = true
-	frame.Draggable = true
-	frame.Name = "ConsoleFrame"
+        Tool0.Name = "SpeedCoil"
+        Tool0.Parent = mas
+        Tool0.TextureId = "rbxassetid://99170415"
+        Tool0.Grip = CFrame.new(0, 0, -0.8)
+        Tool0.ToolTip = "Speed Up!"
 
-	local title = Instance.new("TextLabel", frame)
-	title.Size = UDim2.new(1, 0, 0, 30)
-	title.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-	title.Text = "SpeedCoil Console"
-	title.TextColor3 = Color3.fromRGB(255, 255, 255)
-	title.Font = Enum.Font.GothamBold
-	title.TextSize = 16
+        -- NOTE: kita tidak menaruh Script server-side di Tool; 
+        -- sebelumnya fungsi effect di-bind di client via cors closure.
+        -- Untuk kompatibilitas dengan implementasimu sebelumnya,
+        -- kita tambahkan listener client-side yang mengubah WalkSpeed saat equip.
 
-	local executeBtn = Instance.new("TextButton", frame)
-	executeBtn.Size = UDim2.new(0.9, 0, 0, 40)
-	executeBtn.Position = UDim2.new(0.05, 0, 0.4, 0)
-	executeBtn.BackgroundColor3 = Color3.fromRGB(70, 130, 180)
-	executeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	executeBtn.Font = Enum.Font.GothamBold
-	executeBtn.Text = "EXECUTE SPEEDCOIL"
+        -- Buat Handle (Part) & mesh & sound
+        Part2.Name = "Handle"
+        Part2.Parent = Tool0
+        Part2.Size = Vector3.new(1,1,2)
+        Part2.BottomSurface = Enum.SurfaceType.Smooth
+        Part2.TopSurface = Enum.SurfaceType.Smooth
 
-	local minimizeBtn = Instance.new("TextButton", frame)
-	minimizeBtn.Size = UDim2.new(0.4, 0, 0, 25)
-	minimizeBtn.Position = UDim2.new(0.55, 0, 0.8, 0)
-	minimizeBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-	minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	minimizeBtn.Font = Enum.Font.Gotham
-	minimizeBtn.Text = "Minimize"
+        SpecialMesh3.Parent = Part2
+        SpecialMesh3.MeshId = "rbxassetid://16606212"
+        SpecialMesh3.Scale = Vector3.new(0.7,0.7,0.7)
+        SpecialMesh3.TextureId = "rbxassetid://99170547"
+        SpecialMesh3.MeshType = Enum.MeshType.FileMesh
 
-	-- state minimaze
-	local minimized = false
-	minimizeBtn.MouseButton1Click:Connect(function()
-		minimized = not minimized
-		if minimized then
-			frame:TweenSize(UDim2.new(0, 200, 0, 35), "Out", "Sine", 0.2)
-			for _,v in ipairs(frame:GetChildren()) do
-				if v ~= title and v ~= minimizeBtn then v.Visible = false end
-			end
-			minimizeBtn.Text = "Maximize"
-		else
-			frame:TweenSize(UDim2.new(0, 250, 0, 150), "Out", "Sine", 0.2)
-			for _,v in ipairs(frame:GetChildren()) do
-				v.Visible = true
-			end
-			minimizeBtn.Text = "Minimize"
-		end
-	end)
+        Sound4.Name = "Equip"
+        Sound4.Parent = Part2
+        Sound4.SoundId = "rbxassetid://99173388"
+        Sound4.Volume = 1
 
-	-- fungsi spawn SpeedCoil (copy dari skrip awal, tanpa modifikasi fungsional)
-	local function SpawnSpeedCoil()
-		local cors = {}
-		local mas = Instance.new("Model",game:GetService("Lighting"))
-		local Tool0 = Instance.new("Tool")
-		local Script1 = Instance.new("Script")
-		local Part2 = Instance.new("Part")
-		local SpecialMesh3 = Instance.new("SpecialMesh")
-		local Sound4 = Instance.new("Sound")
-		Tool0.Name = "SpeedCoil"
-		Tool0.Parent = mas
-		Tool0.TextureId = "rbxassetid://99170415"
-		Tool0.Grip = CFrame.new(0, 0, -0.8)
-		Tool0.ToolTip = "Speed Up!"
-		Script1.Name = "SpeedScript"
-		Script1.Parent = Tool0
-		table.insert(cors, function()
-			local Services = {
-				Players = game:GetService("Players"),
-				TweenService = game:GetService("TweenService"),	
-				Debris = game:GetService("Debris"),
-				RunService = game:GetService("RunService")
-			}
+        -- Tambah behaviour client-side: boost speed on equip, restore on unequip
+        -- (ini menggantikan Script server-side supaya efek bisa bekerja untuk client)
+        local BOOST = 10
+        do
+            -- buat koneksi saat tool di-equip
+            Tool0.Equipped:Connect(function()
+                local character = Tool0.Parent
+                local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+                if not humanoid then return end
+                -- simpan last speed di Attribute supaya aman
+                if humanoid:GetAttribute("SpeedCoil_LastSpeed") then return end
+                humanoid:SetAttribute("SpeedCoil_LastSpeed", humanoid.WalkSpeed)
+                humanoid.WalkSpeed = (humanoid.WalkSpeed or 16) + BOOST
+                local handle = Tool0:FindFirstChild("Handle")
+                if handle then
+                    local s = handle:FindFirstChild("Equip")
+                    if s and s:IsA("Sound") then
+                        pcall(function() s:Play() end)
+                    end
+                end
+            end)
 
-			local Properties = {
-				SpeedBoost = 10,
-				SpeedForSmoke = 20
-			}
+            Tool0.Unequipped:Connect(function()
+                local character = Tool0.Parent
+                local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+                if not humanoid then return end
+                local last = humanoid:GetAttribute("SpeedCoil_LastSpeed")
+                if last then
+                    humanoid.WalkSpeed = last
+                    humanoid:SetAttribute("SpeedCoil_LastSpeed", nil)
+                end
+            end)
+        end
 
-			local Tool = Script1.Parent
-			local Handle = Tool:WaitForChild("Handle")
-			local Character, Player, Humanoid, Root, LastSpeed
+        -- Pindahkan tool ke Backpack pemain (tunggu Backpack tersedia)
+        local backpack = player:WaitForChild("Backpack", 5)
+        -- final parent
+        for i, v in pairs(mas:GetChildren()) do
+            v.Parent = backpack
+            pcall(function() v:MakeJoints() end)
+        end
+        mas:Destroy()
+    end)
 
-			local function CheckIfAlive()
-				return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Player and Player.Parent) and true) or false)
-			end
-
-			Tool.Equipped:Connect(function()
-				Character = Tool.Parent
-				Player = Services.Players:GetPlayerFromCharacter(Character)
-				Humanoid = Character:FindFirstChildOfClass("Humanoid")
-				Root = Character:FindFirstChild("HumanoidRootPart")
-				Services.RunService.Heartbeat:Wait()
-				if not Tool:IsDescendantOf(workspace) or not CheckIfAlive() or LastSpeed then
-					return
-				end
-				LastSpeed = Humanoid.WalkSpeed
-				Humanoid.WalkSpeed = Humanoid.WalkSpeed + Properties.SpeedBoost
-				Handle:WaitForChild("Equip"):Play()
-			end)
-
-			Tool.Unequipped:Connect(function()
-				if not LastSpeed or not CheckIfAlive() then
-					return
-				end
-				Humanoid.WalkSpeed = LastSpeed
-				LastSpeed = nil
-			end)
-		end)
-
-		Part2.Name = "Handle"
-		Part2.Parent = Tool0
-		Part2.Size = Vector3.new(1, 1, 2)
-		Part2.BottomSurface = Enum.SurfaceType.Smooth
-		Part2.TopSurface = Enum.SurfaceType.Smooth
-		SpecialMesh3.Parent = Part2
-		SpecialMesh3.MeshId = "rbxassetid://16606212"
-		SpecialMesh3.Scale = Vector3.new(0.7, 0.7, 0.7)
-		SpecialMesh3.TextureId = "rbxassetid://99170547"
-		SpecialMesh3.MeshType = Enum.MeshType.FileMesh
-		Sound4.Name = "Equip"
-		Sound4.Parent = Part2
-		Sound4.SoundId = "rbxassetid://99173388"
-		Sound4.Volume = 1
-
-		for i,v in pairs(mas:GetChildren()) do
-			v.Parent = player:WaitForChild("Backpack")
-			pcall(function() v:MakeJoints() end)
-		end
-		mas:Destroy()
-		for i,v in pairs(cors) do
-			spawn(function()
-				pcall(v)
-			end)
-		end
-	end
-
-	executeBtn.MouseButton1Click:Connect(function()
-		pcall(SpawnSpeedCoil)
-	end)
-
-	return gui
+    if not success then
+        warn("SpawnSpeedCoil gagal: ", err)
+    end
 end
 
--- bikin GUI awal (jika belum ada)
-local consoleGui = createConsoleGui()
-
--- Pastikan GUI tetap ada / recreate kalau karena alasan lain hilang saat spawn
-player.CharacterAdded:Connect(function()
-	-- delay kecil agar PlayerGui tersedia penuh
-	task.wait(0.1)
-	if not player:FindFirstChild("PlayerGui") then return end
-	if not player.PlayerGui:FindFirstChild("SpeedCoilConsole") then
-		createConsoleGui()
-	end
+-- Auto-spawn saat karakter terbentuk (respawn)
+player.CharacterAdded:Connect(function(char)
+    -- tunda kecil agar Backpack ter-attach
+    task.wait(0.1)
+    -- spawn-safe
+    pcall(function() SpawnSpeedCoil() end)
 end)
 
-print("✅ SpeedCoil Console (persist) loaded.")
+-- Jalankan segera kalau pemain sudah punya character
+if player.Character then
+    task.spawn(function()
+        task.wait(0.1)
+        pcall(function() SpawnSpeedCoil() end)
+    end)
+end
+
+print("AutoSpawn SpeedCoil script aktif (client).")
