@@ -1,156 +1,182 @@
---[[ 
-✅ SpeedCoil Console Menu v1
-Dibuat agar pemain bisa men-generate SpeedCoil lewat GUI internal.
-Cukup klik "Execute" di GUI untuk menjalankan skrip asli.
-Tombol "Minimize" bisa menyembunyikan/munculkan GUI.
-]]
+-- SpeedCoil Console v2 (persisten setelah respawn)
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
 
--- Buat GUI utama
-local player = game.Players.LocalPlayer
-local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-gui.Name = "SpeedCoilConsole"
-
-local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 250, 0, 150)
-frame.Position = UDim2.new(0.05, 0, 0.1, 0)
-frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-frame.Active = true
-frame.Draggable = true
-frame.Name = "ConsoleFrame"
-
-local title = Instance.new("TextLabel", frame)
-title.Size = UDim2.new(1, 0, 0, 30)
-title.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-title.Text = "SpeedCoil Console"
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.Font = Enum.Font.GothamBold
-title.TextSize = 16
-
-local executeBtn = Instance.new("TextButton", frame)
-executeBtn.Size = UDim2.new(0.9, 0, 0, 40)
-executeBtn.Position = UDim2.new(0.05, 0, 0.4, 0)
-executeBtn.BackgroundColor3 = Color3.fromRGB(70, 130, 180)
-executeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-executeBtn.Font = Enum.Font.GothamBold
-executeBtn.Text = "EXECUTE SPEEDCOIL"
-
-local minimizeBtn = Instance.new("TextButton", frame)
-minimizeBtn.Size = UDim2.new(0.4, 0, 0, 25)
-minimizeBtn.Position = UDim2.new(0.55, 0, 0.8, 0)
-minimizeBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-minimizeBtn.Font = Enum.Font.Gotham
-minimizeBtn.Text = "Minimize"
-
-local minimized = false
-
-minimizeBtn.MouseButton1Click:Connect(function()
-	minimized = not minimized
-	if minimized then
-		frame:TweenSize(UDim2.new(0, 200, 0, 35), "Out", "Sine", 0.3)
-		for _,v in ipairs(frame:GetChildren()) do
-			if v ~= title and v ~= minimizeBtn then v.Visible = false end
+-- Utility untuk membuat GUI kalau belum ada
+local function createConsoleGui()
+	-- cek kalau sudah ada, kembalikan instance itu
+	local existing = player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("SpeedCoilConsole")
+	if existing then
+		-- pastikan ResetOnSpawn false supaya tidak hilang lagi
+		if existing:IsA("ScreenGui") then
+			pcall(function() existing.ResetOnSpawn = false end)
 		end
-		minimizeBtn.Text = "Maximize"
-	else
-		frame:TweenSize(UDim2.new(0, 250, 0, 150), "Out", "Sine", 0.3)
-		for _,v in ipairs(frame:GetChildren()) do
-			v.Visible = true
-		end
-		minimizeBtn.Text = "Minimize"
+		return existing
 	end
-end)
 
--- Fungsi untuk spawn SpeedCoil (ini adalah skrip asli yang kamu berikan, tidak diubah)
-local function SpawnSpeedCoil()
-	local cors = {}
-	local mas = Instance.new("Model",game:GetService("Lighting"))
-	local Tool0 = Instance.new("Tool")
-	local Script1 = Instance.new("Script")
-	local Part2 = Instance.new("Part")
-	local SpecialMesh3 = Instance.new("SpecialMesh")
-	local Sound4 = Instance.new("Sound")
-	Tool0.Name = "SpeedCoil"
-	Tool0.Parent = mas
-	Tool0.TextureId = "rbxassetid://99170415"
-	Tool0.Grip = CFrame.new(0, 0, -0.8)
-	Tool0.ToolTip = "Speed Up!"
-	Script1.Name = "SpeedScript"
-	Script1.Parent = Tool0
-	table.insert(cors, function()
-		--Rescripted by samtheblender
-		local Services = {
-			Players = game:GetService("Players"),
-			TweenService = game:GetService("TweenService"),	
-			Debris = game:GetService("Debris"),
-			RunService = game:GetService("RunService")
-		}
+	-- buat ScreenGui baru dan set ResetOnSpawn = false
+	local gui = Instance.new("ScreenGui")
+	gui.Name = "SpeedCoilConsole"
+	gui.ResetOnSpawn = false
+	gui.Parent = player:WaitForChild("PlayerGui")
 
-		local Properties = {
-			SpeedBoost = 10,
-			SpeedForSmoke = 20
-		}
+	-- Frame utama
+	local frame = Instance.new("Frame", gui)
+	frame.Size = UDim2.new(0, 250, 0, 150)
+	frame.Position = UDim2.new(0.05, 0, 0.1, 0)
+	frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	frame.Active = true
+	frame.Draggable = true
+	frame.Name = "ConsoleFrame"
 
-		local Tool = Script1.Parent
-		local Handle = Tool:WaitForChild("Handle")
-		local Character, Player, Humanoid, Root, LastSpeed
+	local title = Instance.new("TextLabel", frame)
+	title.Size = UDim2.new(1, 0, 0, 30)
+	title.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+	title.Text = "SpeedCoil Console"
+	title.TextColor3 = Color3.fromRGB(255, 255, 255)
+	title.Font = Enum.Font.GothamBold
+	title.TextSize = 16
 
-		local function CheckIfAlive()
-			return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Player and Player.Parent) and true) or false)
+	local executeBtn = Instance.new("TextButton", frame)
+	executeBtn.Size = UDim2.new(0.9, 0, 0, 40)
+	executeBtn.Position = UDim2.new(0.05, 0, 0.4, 0)
+	executeBtn.BackgroundColor3 = Color3.fromRGB(70, 130, 180)
+	executeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	executeBtn.Font = Enum.Font.GothamBold
+	executeBtn.Text = "EXECUTE SPEEDCOIL"
+
+	local minimizeBtn = Instance.new("TextButton", frame)
+	minimizeBtn.Size = UDim2.new(0.4, 0, 0, 25)
+	minimizeBtn.Position = UDim2.new(0.55, 0, 0.8, 0)
+	minimizeBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+	minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	minimizeBtn.Font = Enum.Font.Gotham
+	minimizeBtn.Text = "Minimize"
+
+	-- state minimaze
+	local minimized = false
+	minimizeBtn.MouseButton1Click:Connect(function()
+		minimized = not minimized
+		if minimized then
+			frame:TweenSize(UDim2.new(0, 200, 0, 35), "Out", "Sine", 0.2)
+			for _,v in ipairs(frame:GetChildren()) do
+				if v ~= title and v ~= minimizeBtn then v.Visible = false end
+			end
+			minimizeBtn.Text = "Maximize"
+		else
+			frame:TweenSize(UDim2.new(0, 250, 0, 150), "Out", "Sine", 0.2)
+			for _,v in ipairs(frame:GetChildren()) do
+				v.Visible = true
+			end
+			minimizeBtn.Text = "Minimize"
 		end
-
-		Tool.Equipped:Connect(function()
-			Character = Tool.Parent
-			Player = Services.Players:GetPlayerFromCharacter(Character)
-			Humanoid = Character:FindFirstChildOfClass("Humanoid")
-			Root = Character:FindFirstChild("HumanoidRootPart")
-			Services.RunService.Heartbeat:Wait()
-			if not Tool:IsDescendantOf(workspace) or not CheckIfAlive() or LastSpeed then
-				return
-			end
-			LastSpeed = Humanoid.WalkSpeed
-			Humanoid.WalkSpeed = Humanoid.WalkSpeed + Properties.SpeedBoost
-			Handle:WaitForChild("Equip"):Play()
-		end)
-
-		Tool.Unequipped:Connect(function()
-			if not LastSpeed or not CheckIfAlive() then
-				return
-			end
-			Humanoid.WalkSpeed = LastSpeed
-			LastSpeed = nil
-		end)
 	end)
 
-	Part2.Name = "Handle"
-	Part2.Parent = Tool0
-	Part2.Size = Vector3.new(1, 1, 2)
-	Part2.BottomSurface = Enum.SurfaceType.Smooth
-	Part2.TopSurface = Enum.SurfaceType.Smooth
-	SpecialMesh3.Parent = Part2
-	SpecialMesh3.MeshId = "rbxassetid://16606212"
-	SpecialMesh3.Scale = Vector3.new(0.7, 0.7, 0.7)
-	SpecialMesh3.TextureId = "rbxassetid://99170547"
-	SpecialMesh3.MeshType = Enum.MeshType.FileMesh
-	Sound4.Name = "Equip"
-	Sound4.Parent = Part2
-	Sound4.SoundId = "rbxassetid://99173388"
-	Sound4.Volume = 1
+	-- fungsi spawn SpeedCoil (copy dari skrip awal, tanpa modifikasi fungsional)
+	local function SpawnSpeedCoil()
+		local cors = {}
+		local mas = Instance.new("Model",game:GetService("Lighting"))
+		local Tool0 = Instance.new("Tool")
+		local Script1 = Instance.new("Script")
+		local Part2 = Instance.new("Part")
+		local SpecialMesh3 = Instance.new("SpecialMesh")
+		local Sound4 = Instance.new("Sound")
+		Tool0.Name = "SpeedCoil"
+		Tool0.Parent = mas
+		Tool0.TextureId = "rbxassetid://99170415"
+		Tool0.Grip = CFrame.new(0, 0, -0.8)
+		Tool0.ToolTip = "Speed Up!"
+		Script1.Name = "SpeedScript"
+		Script1.Parent = Tool0
+		table.insert(cors, function()
+			local Services = {
+				Players = game:GetService("Players"),
+				TweenService = game:GetService("TweenService"),	
+				Debris = game:GetService("Debris"),
+				RunService = game:GetService("RunService")
+			}
 
-	for i,v in pairs(mas:GetChildren()) do
-		v.Parent = player.Backpack
-		pcall(function() v:MakeJoints() end)
-	end
-	mas:Destroy()
-	for i,v in pairs(cors) do
-		spawn(function()
-			pcall(v)
+			local Properties = {
+				SpeedBoost = 10,
+				SpeedForSmoke = 20
+			}
+
+			local Tool = Script1.Parent
+			local Handle = Tool:WaitForChild("Handle")
+			local Character, Player, Humanoid, Root, LastSpeed
+
+			local function CheckIfAlive()
+				return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Player and Player.Parent) and true) or false)
+			end
+
+			Tool.Equipped:Connect(function()
+				Character = Tool.Parent
+				Player = Services.Players:GetPlayerFromCharacter(Character)
+				Humanoid = Character:FindFirstChildOfClass("Humanoid")
+				Root = Character:FindFirstChild("HumanoidRootPart")
+				Services.RunService.Heartbeat:Wait()
+				if not Tool:IsDescendantOf(workspace) or not CheckIfAlive() or LastSpeed then
+					return
+				end
+				LastSpeed = Humanoid.WalkSpeed
+				Humanoid.WalkSpeed = Humanoid.WalkSpeed + Properties.SpeedBoost
+				Handle:WaitForChild("Equip"):Play()
+			end)
+
+			Tool.Unequipped:Connect(function()
+				if not LastSpeed or not CheckIfAlive() then
+					return
+				end
+				Humanoid.WalkSpeed = LastSpeed
+				LastSpeed = nil
+			end)
 		end)
+
+		Part2.Name = "Handle"
+		Part2.Parent = Tool0
+		Part2.Size = Vector3.new(1, 1, 2)
+		Part2.BottomSurface = Enum.SurfaceType.Smooth
+		Part2.TopSurface = Enum.SurfaceType.Smooth
+		SpecialMesh3.Parent = Part2
+		SpecialMesh3.MeshId = "rbxassetid://16606212"
+		SpecialMesh3.Scale = Vector3.new(0.7, 0.7, 0.7)
+		SpecialMesh3.TextureId = "rbxassetid://99170547"
+		SpecialMesh3.MeshType = Enum.MeshType.FileMesh
+		Sound4.Name = "Equip"
+		Sound4.Parent = Part2
+		Sound4.SoundId = "rbxassetid://99173388"
+		Sound4.Volume = 1
+
+		for i,v in pairs(mas:GetChildren()) do
+			v.Parent = player:WaitForChild("Backpack")
+			pcall(function() v:MakeJoints() end)
+		end
+		mas:Destroy()
+		for i,v in pairs(cors) do
+			spawn(function()
+				pcall(v)
+			end)
+		end
 	end
+
+	executeBtn.MouseButton1Click:Connect(function()
+		pcall(SpawnSpeedCoil)
+	end)
+
+	return gui
 end
 
-executeBtn.MouseButton1Click:Connect(function()
-	pcall(SpawnSpeedCoil)
+-- bikin GUI awal (jika belum ada)
+local consoleGui = createConsoleGui()
+
+-- Pastikan GUI tetap ada / recreate kalau karena alasan lain hilang saat spawn
+player.CharacterAdded:Connect(function()
+	-- delay kecil agar PlayerGui tersedia penuh
+	task.wait(0.1)
+	if not player:FindFirstChild("PlayerGui") then return end
+	if not player.PlayerGui:FindFirstChild("SpeedCoilConsole") then
+		createConsoleGui()
+	end
 end)
 
-print("✅ SpeedCoil Console loaded! Click EXECUTE to spawn.")
+print("✅ SpeedCoil Console (persist) loaded.")
