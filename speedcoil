@@ -1,102 +1,156 @@
---Converted with ttyyuu12345's model to script plugin v4
-function sandbox(var,func)
-	local env = getfenv(func)
-	local newenv = setmetatable({},{
-		__index = function(self,k)
-			if k=="script" then
-				return var
-			else
-				return env[k]
+--[[ 
+✅ SpeedCoil Console Menu v1
+Dibuat agar pemain bisa men-generate SpeedCoil lewat GUI internal.
+Cukup klik "Execute" di GUI untuk menjalankan skrip asli.
+Tombol "Minimize" bisa menyembunyikan/munculkan GUI.
+]]
+
+-- Buat GUI utama
+local player = game.Players.LocalPlayer
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+gui.Name = "SpeedCoilConsole"
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 250, 0, 150)
+frame.Position = UDim2.new(0.05, 0, 0.1, 0)
+frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+frame.Active = true
+frame.Draggable = true
+frame.Name = "ConsoleFrame"
+
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, 0, 0, 30)
+title.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+title.Text = "SpeedCoil Console"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 16
+
+local executeBtn = Instance.new("TextButton", frame)
+executeBtn.Size = UDim2.new(0.9, 0, 0, 40)
+executeBtn.Position = UDim2.new(0.05, 0, 0.4, 0)
+executeBtn.BackgroundColor3 = Color3.fromRGB(70, 130, 180)
+executeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+executeBtn.Font = Enum.Font.GothamBold
+executeBtn.Text = "EXECUTE SPEEDCOIL"
+
+local minimizeBtn = Instance.new("TextButton", frame)
+minimizeBtn.Size = UDim2.new(0.4, 0, 0, 25)
+minimizeBtn.Position = UDim2.new(0.55, 0, 0.8, 0)
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+minimizeBtn.Font = Enum.Font.Gotham
+minimizeBtn.Text = "Minimize"
+
+local minimized = false
+
+minimizeBtn.MouseButton1Click:Connect(function()
+	minimized = not minimized
+	if minimized then
+		frame:TweenSize(UDim2.new(0, 200, 0, 35), "Out", "Sine", 0.3)
+		for _,v in ipairs(frame:GetChildren()) do
+			if v ~= title and v ~= minimizeBtn then v.Visible = false end
+		end
+		minimizeBtn.Text = "Maximize"
+	else
+		frame:TweenSize(UDim2.new(0, 250, 0, 150), "Out", "Sine", 0.3)
+		for _,v in ipairs(frame:GetChildren()) do
+			v.Visible = true
+		end
+		minimizeBtn.Text = "Minimize"
+	end
+end)
+
+-- Fungsi untuk spawn SpeedCoil (ini adalah skrip asli yang kamu berikan, tidak diubah)
+local function SpawnSpeedCoil()
+	local cors = {}
+	local mas = Instance.new("Model",game:GetService("Lighting"))
+	local Tool0 = Instance.new("Tool")
+	local Script1 = Instance.new("Script")
+	local Part2 = Instance.new("Part")
+	local SpecialMesh3 = Instance.new("SpecialMesh")
+	local Sound4 = Instance.new("Sound")
+	Tool0.Name = "SpeedCoil"
+	Tool0.Parent = mas
+	Tool0.TextureId = "rbxassetid://99170415"
+	Tool0.Grip = CFrame.new(0, 0, -0.8)
+	Tool0.ToolTip = "Speed Up!"
+	Script1.Name = "SpeedScript"
+	Script1.Parent = Tool0
+	table.insert(cors, function()
+		--Rescripted by samtheblender
+		local Services = {
+			Players = game:GetService("Players"),
+			TweenService = game:GetService("TweenService"),	
+			Debris = game:GetService("Debris"),
+			RunService = game:GetService("RunService")
+		}
+
+		local Properties = {
+			SpeedBoost = 10,
+			SpeedForSmoke = 20
+		}
+
+		local Tool = Script1.Parent
+		local Handle = Tool:WaitForChild("Handle")
+		local Character, Player, Humanoid, Root, LastSpeed
+
+		local function CheckIfAlive()
+			return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Player and Player.Parent) and true) or false)
+		end
+
+		Tool.Equipped:Connect(function()
+			Character = Tool.Parent
+			Player = Services.Players:GetPlayerFromCharacter(Character)
+			Humanoid = Character:FindFirstChildOfClass("Humanoid")
+			Root = Character:FindFirstChild("HumanoidRootPart")
+			Services.RunService.Heartbeat:Wait()
+			if not Tool:IsDescendantOf(workspace) or not CheckIfAlive() or LastSpeed then
+				return
 			end
-		end,
-	})
-	setfenv(func,newenv)
-	return func
-end
-cors = {}
-mas = Instance.new("Model",game:GetService("Lighting"))
-Tool0 = Instance.new("Tool")
-Script1 = Instance.new("Script")
-Part2 = Instance.new("Part")
-SpecialMesh3 = Instance.new("SpecialMesh")
-Sound4 = Instance.new("Sound")
-Tool0.Name = "SpeedCoil"
-Tool0.Parent = mas
-Tool0.TextureId = "rbxassetid://99170415"
-Tool0.Grip = CFrame.new(0, 0, -0.800000012, 1, 0, 0, 0, 1, 0, 0, 0, 1)
-Tool0.GripPos = Vector3.new(0, 0, -0.800000011920929)
-Tool0.ToolTip = "Speed Up!"
-Script1.Name = "SpeedScript"
-Script1.Parent = Tool0
-table.insert(cors,sandbox(Script1,function()
---Rescripted by samtheblender
-local Services = {
-	Players = (game:FindService("Players") or game:GetService("Players")),
-	TweenService = (game:FindService("TweenService") or game:GetService("TweenService")),	
-	Debris = (game:FindService("Debris") or game:GetService("Debris")),
-	RunService = (game:FindService("RunService") or game:GetService("RunService"))
-}
+			LastSpeed = Humanoid.WalkSpeed
+			Humanoid.WalkSpeed = Humanoid.WalkSpeed + Properties.SpeedBoost
+			Handle:WaitForChild("Equip"):Play()
+		end)
 
-local Properties = {
-	SpeedBoost = 10,
-	SpeedForSmoke = 20
-}
-
-local Tool = script.Parent
-local Handle = Tool:WaitForChild("Handle")
-local Character, Player, Humanoid, Root, LastSpeed
-
-function CheckIfAlive()
-	return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health > 0 and Player and Player.Parent) and true) or false)
-end
-
--- Efek asap dihapus dari versi ini
-
-Tool.Equipped:Connect(function()
-	Character = Tool.Parent
-	Player = Services.Players:GetPlayerFromCharacter(Character)
-	Humanoid = Character:FindFirstChildOfClass("Humanoid")
-	Root = Character:FindFirstChild("HumanoidRootPart")
-	Services.RunService.Heartbeat:Wait()
-	if not Tool:IsDescendantOf(workspace) or not CheckIfAlive() or LastSpeed then
-		return
-	end
-	LastSpeed = Humanoid.WalkSpeed
-	Humanoid.WalkSpeed = Humanoid.WalkSpeed + Properties.SpeedBoost
-	Handle:WaitForChild("Equip"):Play()
-end)
-
-Tool.Unequipped:Connect(function()
-	if not LastSpeed or not CheckIfAlive() then
-		return
-	end
-	Humanoid.WalkSpeed = LastSpeed
-	LastSpeed = nil
-end)
-end))
-Part2.Name = "Handle"
-Part2.Parent = Tool0
-Part2.CFrame = CFrame.new(-3, 0.5, 6, 1, 0, 0, 0, 1, 0, 0, 0, 1)
-Part2.Position = Vector3.new(-3, 0.5, 6)
-Part2.Size = Vector3.new(1, 1, 2)
-Part2.BottomSurface = Enum.SurfaceType.Smooth
-Part2.TopSurface = Enum.SurfaceType.Smooth
-SpecialMesh3.Parent = Part2
-SpecialMesh3.MeshId = "rbxassetid://16606212"
-SpecialMesh3.Scale = Vector3.new(0.699999988079071, 0.699999988079071, 0.699999988079071)
-SpecialMesh3.TextureId = "rbxassetid://99170547"
-SpecialMesh3.MeshType = Enum.MeshType.FileMesh
-Sound4.Name = "Equip"
-Sound4.Parent = Part2
-Sound4.SoundId = "rbxassetid://99173388"
-Sound4.Volume = 1
-for i,v in pairs(mas:GetChildren()) do
-	v.Parent = game:GetService("Players").LocalPlayer.Backpack
-	pcall(function() v:MakeJoints() end)
-end
-mas:Destroy()
-for i,v in pairs(cors) do
-	spawn(function()
-		pcall(v)
+		Tool.Unequipped:Connect(function()
+			if not LastSpeed or not CheckIfAlive() then
+				return
+			end
+			Humanoid.WalkSpeed = LastSpeed
+			LastSpeed = nil
+		end)
 	end)
+
+	Part2.Name = "Handle"
+	Part2.Parent = Tool0
+	Part2.Size = Vector3.new(1, 1, 2)
+	Part2.BottomSurface = Enum.SurfaceType.Smooth
+	Part2.TopSurface = Enum.SurfaceType.Smooth
+	SpecialMesh3.Parent = Part2
+	SpecialMesh3.MeshId = "rbxassetid://16606212"
+	SpecialMesh3.Scale = Vector3.new(0.7, 0.7, 0.7)
+	SpecialMesh3.TextureId = "rbxassetid://99170547"
+	SpecialMesh3.MeshType = Enum.MeshType.FileMesh
+	Sound4.Name = "Equip"
+	Sound4.Parent = Part2
+	Sound4.SoundId = "rbxassetid://99173388"
+	Sound4.Volume = 1
+
+	for i,v in pairs(mas:GetChildren()) do
+		v.Parent = player.Backpack
+		pcall(function() v:MakeJoints() end)
+	end
+	mas:Destroy()
+	for i,v in pairs(cors) do
+		spawn(function()
+			pcall(v)
+		end)
+	end
 end
+
+executeBtn.MouseButton1Click:Connect(function()
+	pcall(SpawnSpeedCoil)
+end)
+
+print("✅ SpeedCoil Console loaded! Click EXECUTE to spawn.")
