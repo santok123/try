@@ -1348,10 +1348,51 @@ Players.LocalPlayer.CharacterAdded:Connect(function(character)
     if lastAnimations.SwimIdle then setAnimation("SwimIdle", lastAnimations.SwimIdle) end
 end)
 
-Notify("PLEASE", "Donate me, im poor :(", 1)
-local lt = os.clock() - st
-Notify("loaded", string.format("in %.2f seconds.", lt), 5)
-Notify("Changelog", "added UI/selection/search behavior", 6)
-Notify("Another Another fix", "Ah yes. fixed respawn ", 6)
+-- ====== MINIMIZE BUTTON CODE ======
+local minimizeButton = Instance.new("TextButton")
+minimizeButton.Name = "MinimizeButton"
+minimizeButton.Text = "-"
+minimizeButton.Font = Enum.Font.SourceSansBold
+minimizeButton.TextScaled = true
+minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+minimizeButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+minimizeButton.BackgroundTransparency = 0
+minimizeButton.BorderSizePixel = 0
+minimizeButton.Size = UDim2.new(0.1, 0, 0.1, 0)
+minimizeButton.Position = UDim2.new(0.9, 0, 0, 0)
+minimizeButton.Parent = frame
 
+-- Minimize state variable
+local isMinimized = false
+
+-- Function to toggle minimize
+local function toggleMinimize()
+    if isMinimized then
+        -- Restore GUI
+        frame.Visible = true
+        searchBar.Visible = true
+        scrollFrame.Visible = true
+        minimizeButton.Text = "-"
+        Notify("Restored", "GUI has been restored", 1)
+    else
+        -- Minimize GUI
+        frame.Size = UDim2.new(0.12, 0, 0.08, 0)
+        searchBar.Visible = false
+        scrollFrame.Visible = false
+        minimizeButton.Text = "+"
+        Notify("Minimized", "Press K to restore", 1)
+    end
+    isMinimized = not isMinimized
+end
+
+-- Connect minimize button click
+minimizeButton.MouseButton1Click:Connect(toggleMinimize)
+
+-- ====== HOTKEY K HANDLER ======
+local UserInputService = game:GetService("UserInputService")
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.K then
+        toggleMinimize()
+    end
 end)
