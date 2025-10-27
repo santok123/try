@@ -115,6 +115,31 @@ screenGui.Name = "DraggableGui"
 screenGui.Parent = cloneref(game.CoreGui)
 
 
+-- Hotkey toggle for GUI minimize/open (K key)
+local UserInputService = game:GetService("UserInputService")
+local isGuiVisible = true
+
+local function toggleGuiVisibility()
+    isGuiVisible = not isGuiVisible
+    if screenGui then
+        screenGui.Enabled = isGuiVisible
+        if isGuiVisible then
+            Notify("GUI", "Opened", 1)
+        else
+            Notify("GUI", "Minimized", 1)
+        end
+    end
+end
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.K then
+        toggleGuiVisibility()
+    end
+end)
+
+
+
+
 local frame = Instance.new("TextButton")
 frame.Name = "GazeBro"
 frame.Text = ""
@@ -817,7 +842,7 @@ local function REFREHSTHEMAINBUTTONS()
     buttons = {}
     createdSet = {}
 
-    --   STUPID   FUCK ALL  FIVE HUNDRED  [ helper to create button for an animation entry
+    -- NIGGERS NIGGERS STUPID NIGGERS NIGGERS FUCK ALL NIGGERS FIVE HUNDRED NIGGERS [ helper to create button for an animation entry
     local function addAnimButton(name, animType, id)
         local buttonText = name .. " - " .. animType
         createTheButton(buttonText, function()
@@ -828,7 +853,7 @@ local function REFREHSTHEMAINBUTTONS()
         end)
     end
 
-    --   STUPID   FUCK ALL  FIVE HUNDRED  [ iterate through Animations table and create buttons (ensures one per entry)
+    -- NIGGERS NIGGERS STUPID NIGGERS NIGGERS FUCK ALL NIGGERS FIVE HUNDRED NIGGERS [ iterate through Animations table and create buttons (ensures one per entry)
     local typeOrder = {"Idle", "Walk", "Run", "Jump", "Fall", "Swim", "SwimIdle", "Climb"}
 
 for _, animType in ipairs(typeOrder) do
@@ -842,10 +867,10 @@ for _, animType in ipairs(typeOrder) do
 end
 end
 
---   STUPID   FUCK ALL  FIVE HUNDRED  [ initial population of main buttons
+-- NIGGERS NIGGERS STUPID NIGGERS NIGGERS FUCK ALL NIGGERS FIVE HUNDRED NIGGERS [ initial population of main buttons
 REFREHSTHEMAINBUTTONS()
 
---   STUPID   FUCK ALL  FIVE HUNDRED  [ Action button behavior
+-- NIGGERS NIGGERS STUPID NIGGERS NIGGERS FUCK ALL NIGGERS FIVE HUNDRED NIGGERS [ Action button behavior
 actionButton.MouseButton1Click:Connect(function()
     if addContent.Visible then
         local name = nameTextBox.Text
@@ -938,7 +963,7 @@ local function lerpPosition()
     local targetPos = managerFrame:GetAttribute("TargetPosition")
     if targetPos then
         local currentPos = managerFrame.Position
-        local lerpSpeed = 0.1 --   STUPID   FUCK ALL  FIVE HUNDRED  [ Adjust this value (0-1) for faster/slower lerping
+        local lerpSpeed = 0.1 -- NIGGERS NIGGERS STUPID NIGGERS NIGGERS FUCK ALL NIGGERS FIVE HUNDRED NIGGERS [ Adjust this value (0-1) for faster/slower lerping
         
         
 
@@ -1244,10 +1269,10 @@ function setAnimation(animationType, animationId)
     end
 
     wait(0.1)
-    unfreeze() --   STUPID   FUCK ALL  FIVE HUNDRED  
+    unfreeze() -- NIGGERS NIGGERS STUPID NIGGERS NIGGERS FUCK ALL NIGGERS FIVE HUNDRED NIGGERS 
 end
 
---   STUPID   FUCK ALL  FIVE HUNDRED  
+-- NIGGERS NIGGERS STUPID NIGGERS NIGGERS FUCK ALL NIGGERS FIVE HUNDRED NIGGERS 
 local function loadLastAnimations()
     if isfile("MeWhenUrMom.json") then
         local data = readfile("MeWhenUrMom.json")
@@ -1348,16 +1373,10 @@ Players.LocalPlayer.CharacterAdded:Connect(function(character)
     if lastAnimations.SwimIdle then setAnimation("SwimIdle", lastAnimations.SwimIdle) end
 end)
 
--- Hotkey to minimize/maximize GUI (Press K)
-local UserInputService = game:GetService("UserInputService")
+Notify("PLEASE", "Donate me, im poor :(", 1)
+local lt = os.clock() - st
+Notify("loaded", string.format("in %.2f seconds.", lt), 5)
+Notify("Changelog", "added UI/selection/search behavior", 6)
+Notify("Another Another fix", "Ah yes. fixed respawn ", 6)
 
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    
-    if input.KeyCode == Enum.KeyCode.K then
-        -- Toggle the GUI size (same as double-click functionality)
-        handleDoubleClick()
-        Notify("Toggle", "GUI toggled with K key", 1)
-    end
 end)
-
